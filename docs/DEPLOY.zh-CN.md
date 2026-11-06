@@ -1,8 +1,8 @@
 # 慧厨时光：家庭自用免费部署跟做版
 
-更新：2026-11-04。基于上游 `RUIIIOVO/tidy-cookbook` 的 `bd6c7fe66192bdef92ef152c64250adc3c407257`，修改分支 `codex/ep18-free-deploy`。
+更新：2026-11-06。基于上游 `RUIIIOVO/tidy-cookbook` 的 `bd6c7fe66192bdef92ef152c64250adc3c407257`，修改分支 `codex/ep18-free-deploy`。
 
-**这是 EP18 修改版的教程。** 源码入口为 [crazynomad/tidy-cookbook-ep18](https://github.com/crazynomad/tidy-cookbook-ep18)。此前 CLI 公网功能已验证；本仓库 Git 自动发布链路正在预演，尚未宣称完成。
+**这是 EP18 修改版的教程。** 源码入口为 [crazynomad/tidy-cookbook-ep18](https://github.com/crazynomad/tidy-cookbook-ep18)。本仓库独立新实例已由官方 MCP 配置主人／邀请码，Wrangler 发布；15 项业务检查及重新部署后订单／点评保留通过。Git 自动构建尚未连接。
 
 ```bash
 git clone https://github.com/crazynomad/tidy-cookbook-ep18.git
@@ -41,6 +41,20 @@ pnpm preview
 打开终端显示的本地地址。用主人账号登录；再用无痕窗口，凭 `.dev.vars` 里的邀请码注册一个家人账号。两边点菜应该同步。
 
 关闭本地服务后数据保留在 `.wrangler/`，重启仍可读到；它不是云端数据库，本地测试数据不会自动传到云端。
+
+## 优先交给官方 MCP 的操作
+
+本人先在 Codex 中连接官方 `https://mcp.cloudflare.com/mcp` 并授权目标账号。只需要本例的账号识别、Workers、D1、构建／日志权限；不为这条路线添加 DNS、R2 或 API token 管理权限。Agent 实际读取账号和目标数据库，不能只凭 OAuth 成功就报告部署完成。
+
+MCP 可以承担账号／资源核对、D1 查询及写入、Worker secret 配置；本地构建和静态资源上传仍由官方 Wrangler 执行。以下 CLI 步骤作为具体操作参考，Agent 用 MCP 做过的同一项不应重复执行。MCP 与 Wrangler 的登录状态不同，必要时本人分别授权。
+
+```text
+帮我部署这个家庭厨房，优先官方 MCP，必要时用官方 Wrangler。先复制示例配置，使用我自己的 Worker 与新 D1，不碰作者或旧厨房资源。
+数据库初始化只执行一次，日常部署不重置数据。主人密码和邀请码由我在本地受保护输入完成，不发到聊天。检查免费套餐，不升级、不购买。
+部署后测试双账号同步、下单、购物勾选、点评和退出，再重新部署验证数据保留。明确报告 MCP、CLI 各完成哪些操作。
+```
+
+新手的主人密码与邀请码仍按下面的受保护输入设置。本次机器预演使用程序生成的独立随机测试凭据，并未录制本人输入密码这一环；教程中应保留这次人工交接。Cloudflare Git Builds 是可选扩展，另需部署令牌，不能把 MCP OAuth 当成构建令牌。默认新令牌包含无关产品权限时，先核对所需范围；本轮没有创建该令牌。
 
 ## 发布到自己的 Cloudflare
 
