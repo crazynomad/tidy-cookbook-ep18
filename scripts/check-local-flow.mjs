@@ -6,7 +6,7 @@ import { randomBytes, randomUUID } from "node:crypto";
 const cloud = process.argv.includes("--cloud");
 const resources = cloud ? JSON.parse(readFileSync(".ep18-local/cloud-resources.json", "utf8")) : null;
 const base = cloud ? resources.url : "http://127.0.0.1:8787";
-if (cloud && (new URL(base).protocol !== "https:" || !new URL(base).hostname.startsWith("ep18-family-kitchen.") || !new URL(base).hostname.endsWith(".workers.dev")))
+if (cloud && (new URL(base).protocol !== "https:" || new URL(base).hostname !== "ep18-family-kitchen-git.burn-wang.workers.dev"))
   throw new Error("Cloud verification is restricted to the saved EP18 workers.dev instance.");
 const credentials = JSON.parse(readFileSync(cloud ? ".ep18-local/cloud-credentials.json" : ".ep18-local/test-owner.json", "utf8"));
 const owner = cloud ? credentials.owner : credentials;
