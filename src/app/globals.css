@@ -1,0 +1,173 @@
+@import "tailwindcss";
+
+@theme {
+  /* ── 纸与墨 ───────────────────────────── */
+  --color-paper: #f5f2eb;
+  --color-paper-2: #ebe6db;
+  --color-card: #fffdf8;
+  --color-ink: #1b1916;
+  --color-ink-2: #5a544b;
+  --color-ink-3: #8d857a;
+  --color-line: #e2dbcd;
+  --color-line-2: #d3cabb;
+
+  /* ── 强调色（冷杉绿，全局交互唯一强调） ──
+     Lab 色相 159°、L* 38、彩度 26：比灰橄榄深 5 档、冷 29°
+     纸底对比 6.27 / 白字 7.01，均过 WCAG AA
+     与 leaf 分类色 ΔE 13.6，素菜分类的标识性保住 */
+  --color-accent: #2e6349;
+  --color-accent-soft: #dce8e0;
+
+  /* ── 分类色（低饱和，手工颜料感）；只用于菜品分类，不做交互强调 ── */
+  --color-chili: #a4381f;
+  --color-chili-soft: #f0e0d9;
+  --color-brine: #2f5a61;
+  --color-brine-soft: #dbe6e6;
+  --color-leaf: #576b48;
+  --color-leaf-soft: #e2e7da;
+  --color-caramel: #a1702f;
+  --color-caramel-soft: #f0e6d4;
+
+  --font-sans:
+    -apple-system, BlinkMacSystemFont, "PingFang SC", "HarmonyOS Sans SC",
+    "Hiragino Sans GB", "Microsoft YaHei", system-ui, sans-serif;
+  --font-display:
+    "Songti SC", "Source Han Serif SC", "Noto Serif CJK SC", "STSong",
+    "SimSun", ui-serif, serif;
+
+  --radius-card: 14px;
+}
+
+@layer base {
+  * {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  html {
+    background: var(--color-paper-2);
+    /* 预留滚动条槽位：否则长页面(菜单/点菜单)出现滚动条时
+       视口变窄 15px，mx-auto 居中的外框和固定底栏会整体左移抖动 */
+    scrollbar-gutter: stable;
+    /* 禁止水平滑动触发浏览器前进/后退历史手势导航 */
+    overscroll-behavior-x: none;
+  }
+
+  body {
+    background: var(--color-paper);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    overscroll-behavior-y: none;
+    overscroll-behavior-x: none;
+  }
+
+  /* 极淡的纸纹，避免纯色塑料感 */
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    opacity: 0.035;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  ::selection {
+    background: var(--color-accent);
+    color: #fff;
+  }
+}
+
+@utility no-scrollbar {
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* 图片加载占位：纸色底上一道缓慢扫过的亮光 */
+@keyframes shimmer {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(100%);
+  }
+}
+
+@utility shimmer {
+  overflow: hidden;
+  background: var(--color-paper-2);
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgb(255 253 248 / 0.55),
+      transparent
+    );
+    animation: shimmer 1.4s ease-in-out infinite;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    &::after {
+      animation: none;
+    }
+  }
+}
+
+@utility hairline-b {
+  box-shadow: inset 0 -1px 0 var(--color-line);
+}
+
+/* 轻量极简微胶囊 Toast：严格水平居中，单行不换行 */
+[data-sonner-toaster] {
+  left: 50% !important;
+  right: auto !important;
+  transform: translateX(-50%) !important;
+  width: 0 !important;
+  pointer-events: none !important;
+}
+
+[data-sonner-toast] {
+  pointer-events: auto !important;
+  position: absolute !important;
+  left: 50% !important;
+  right: auto !important;
+  transform: translateX(-50%) translateY(calc(var(--offset, 0px) + var(--lift-amount, 0px) * var(--toasts-before, 0))) !important;
+  width: max-content !important;
+  min-width: fit-content !important;
+  max-width: 86vw !important;
+  white-space: nowrap !important;
+  border-radius: 9999px !important;
+  border: 1px solid var(--color-line) !important;
+  background: color-mix(in srgb, var(--color-card) 94%, transparent) !important;
+  color: var(--color-ink) !important;
+  padding: 6px 14px !important;
+  font-size: 12px !important;
+  font-weight: 500 !important;
+  line-height: 1.4 !important;
+  box-shadow: 0 4px 18px -2px rgba(0, 0, 0, 0.08) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+}
+
+[data-sonner-toast] [data-content] {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  white-space: nowrap !important;
+}
+
+[data-sonner-toast] [data-title] {
+  white-space: nowrap !important;
+  word-break: keep-all !important;
+  overflow-wrap: normal !important;
+}
+
+[data-sonner-toast] [data-icon] {
+  color: var(--color-caramel) !important;
+  margin-right: 4px !important;
+}
+

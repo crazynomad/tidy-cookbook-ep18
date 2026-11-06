@@ -1,0 +1,374 @@
+{
+  "1": {
+    "pinyin": "xiangweilajiaoxiaochaorou",
+    "initials": "xwljxcr"
+  },
+  "2": {
+    "pinyin": "suantaichaorou",
+    "initials": "stcr"
+  },
+  "3": {
+    "pinyin": "suanmiaochaorou",
+    "initials": "smcr"
+  },
+  "4": {
+    "pinyin": "xiqinchaorou",
+    "initials": "xqcr"
+  },
+  "5": {
+    "pinyin": "jiaobaichaorou",
+    "initials": "jbcr"
+  },
+  "6": {
+    "pinyin": "baochaoxianzhugan",
+    "initials": "bcxzg"
+  },
+  "7": {
+    "pinyin": "hongshaopaigu",
+    "initials": "hspg"
+  },
+  "8": {
+    "pinyin": "tangcupaigu",
+    "initials": "tcpg"
+  },
+  "9": {
+    "pinyin": "suanxiangpaigu",
+    "initials": "sxpg"
+  },
+  "10": {
+    "pinyin": "dongbeidafengshou",
+    "initials": "dbdfs"
+  },
+  "11": {
+    "pinyin": "helandouchaolachang",
+    "initials": "hldclc"
+  },
+  "12": {
+    "pinyin": "qingjiaoniangrou",
+    "initials": "qjnr"
+  },
+  "13": {
+    "pinyin": "qingzhengrouwan",
+    "initials": "qzrw"
+  },
+  "14": {
+    "pinyin": "xilanhuachaorou",
+    "initials": "xlhcr"
+  },
+  "15": {
+    "pinyin": "muxurou",
+    "initials": "mxr"
+  },
+  "16": {
+    "pinyin": "xiaochaohuangniurou",
+    "initials": "xchnr"
+  },
+  "17": {
+    "pinyin": "jinzhenguzhengniurou",
+    "initials": "jzgznr"
+  },
+  "18": {
+    "pinyin": "xiangjianniupai",
+    "initials": "xjnp"
+  },
+  "19": {
+    "pinyin": "shougongniurouhanbao",
+    "initials": "sgnrhb"
+  },
+  "20": {
+    "pinyin": "kelejichi",
+    "initials": "kljc"
+  },
+  "21": {
+    "pinyin": "suanxiangjichi",
+    "initials": "sxjc"
+  },
+  "22": {
+    "pinyin": "aoerliangkaochi",
+    "initials": "aelkc"
+  },
+  "23": {
+    "pinyin": "xiangguhuaji",
+    "initials": "xghj"
+  },
+  "24": {
+    "pinyin": "xinjiangdapanji",
+    "initials": "xjdpj"
+  },
+  "25": {
+    "pinyin": "malabaochaojizhua",
+    "initials": "mlbcjz"
+  },
+  "26": {
+    "pinyin": "baizhuojiweixia",
+    "initials": "bzjwx"
+  },
+  "27": {
+    "pinyin": "youbaohexia",
+    "initials": "ybhx"
+  },
+  "28": {
+    "pinyin": "koumoxiaren",
+    "initials": "kmxr"
+  },
+  "29": {
+    "pinyin": "xilanhuachaoxiaren",
+    "initials": "xlhcxr"
+  },
+  "30": {
+    "pinyin": "qingzhengluyu",
+    "initials": "qzly"
+  },
+  "31": {
+    "pinyin": "suancaiyupian",
+    "initials": "scyp"
+  },
+  "32": {
+    "pinyin": "baochaohuajia",
+    "initials": "bchj"
+  },
+  "33": {
+    "pinyin": "congyouchengzi",
+    "initials": "cycz"
+  },
+  "34": {
+    "pinyin": "lachaohuajiarou",
+    "initials": "lchjr"
+  },
+  "35": {
+    "pinyin": "baochaoluosi",
+    "initials": "bcls"
+  },
+  "36": {
+    "pinyin": "baochaoyouyuxu",
+    "initials": "bcyyx"
+  },
+  "37": {
+    "pinyin": "congyoudiwangxie",
+    "initials": "cydwx"
+  },
+  "38": {
+    "pinyin": "qingzhengsuozixie",
+    "initials": "qzszx"
+  },
+  "39": {
+    "pinyin": "lachaosuozixie",
+    "initials": "lcszx"
+  },
+  "40": {
+    "pinyin": "jiucaichaojidan",
+    "initials": "jccjd"
+  },
+  "41": {
+    "pinyin": "jiuhuangchaojidan",
+    "initials": "jhcjd"
+  },
+  "42": {
+    "pinyin": "sijidouchaojidan",
+    "initials": "sjdcjd"
+  },
+  "43": {
+    "pinyin": "fanqiechaojidan",
+    "initials": "fqcjd"
+  },
+  "44": {
+    "pinyin": "bocaichaojidan",
+    "initials": "bccjd"
+  },
+  "45": {
+    "pinyin": "huangguachaojidan",
+    "initials": "hgcjd"
+  },
+  "46": {
+    "pinyin": "yangcongchaojidan",
+    "initials": "yccjd"
+  },
+  "47": {
+    "pinyin": "xiangganchaomaodou",
+    "initials": "xgcmd"
+  },
+  "48": {
+    "pinyin": "mapodoufu",
+    "initials": "mpdf"
+  },
+  "49": {
+    "pinyin": "xiangjiandoufu",
+    "initials": "xjdf"
+  },
+  "50": {
+    "pinyin": "kejianiangdoufu",
+    "initials": "kjndf"
+  },
+  "51": {
+    "pinyin": "qingchaokongxincai",
+    "initials": "qckxc"
+  },
+  "52": {
+    "pinyin": "qingchaojimaocai",
+    "initials": "qcjmc"
+  },
+  "53": {
+    "pinyin": "qingchaocaixin",
+    "initials": "qccx"
+  },
+  "54": {
+    "pinyin": "qingchaobaicai",
+    "initials": "qcbc"
+  },
+  "55": {
+    "pinyin": "qingchaoyoumaicai",
+    "initials": "qcymc"
+  },
+  "56": {
+    "pinyin": "qingchaobocai",
+    "initials": "qcbc"
+  },
+  "57": {
+    "pinyin": "haoyoushengcai",
+    "initials": "hysc"
+  },
+  "58": {
+    "pinyin": "chaoxingbaogu",
+    "initials": "cxbg"
+  },
+  "59": {
+    "pinyin": "ganguocaihua",
+    "initials": "ggch"
+  },
+  "60": {
+    "pinyin": "qingchaotudousi",
+    "initials": "qctds"
+  },
+  "61": {
+    "pinyin": "suchaosanding",
+    "initials": "scsd"
+  },
+  "62": {
+    "pinyin": "hongshaoqiezi",
+    "initials": "hsqz"
+  },
+  "63": {
+    "pinyin": "mikaohongshu",
+    "initials": "mkhs"
+  },
+  "64": {
+    "pinyin": "suanrongpaihuanggua",
+    "initials": "srphg"
+  },
+  "65": {
+    "pinyin": "yumipaigubao",
+    "initials": "ympgb"
+  },
+  "66": {
+    "pinyin": "haidaipaigutang",
+    "initials": "hdpgt"
+  },
+  "67": {
+    "pinyin": "chongcaohuadunji",
+    "initials": "cchdj"
+  },
+  "68": {
+    "pinyin": "niurouwanzitang",
+    "initials": "nrwzt"
+  },
+  "69": {
+    "pinyin": "siguadanhuatang",
+    "initials": "sgdht"
+  },
+  "70": {
+    "pinyin": "baicaidoufutang",
+    "initials": "bcdft"
+  },
+  "71": {
+    "pinyin": "haidaidoufutang",
+    "initials": "hddft"
+  },
+  "72": {
+    "pinyin": "dongguatang",
+    "initials": "dgt"
+  },
+  "73": {
+    "pinyin": "huangjindanchaofan",
+    "initials": "hjdcf"
+  },
+  "74": {
+    "pinyin": "fengweichaofangbianmian",
+    "initials": "fwcfbm"
+  },
+  "75": {
+    "pinyin": "jiachangchaofengan",
+    "initials": "jccfg"
+  },
+  "76": {
+    "pinyin": "guangshilaweibaozaifan",
+    "initials": "gslwbzf"
+  },
+  "77": {
+    "pinyin": "shougongyumizhurouzhengjiao",
+    "initials": "sgymzrzj"
+  },
+  "78": {
+    "pinyin": "jiachangmian",
+    "initials": "jcm"
+  },
+  "79": {
+    "pinyin": "yueshishouzuotangshui",
+    "initials": "ysszts"
+  },
+  "80": {
+    "pinyin": "shundeshuangpinai",
+    "initials": "sdspn"
+  },
+  "81": {
+    "pinyin": "pushijingdiandanta",
+    "initials": "psjddt"
+  },
+  "82": {
+    "pinyin": "yuanweixiangcuishutiao",
+    "initials": "ywxcst"
+  },
+  "83": {
+    "pinyin": "huangjinmeishishubing",
+    "initials": "hjmssb"
+  },
+  "84": {
+    "pinyin": "chuanxiangxianzhaxiaosurou",
+    "initials": "cxxzxsr"
+  },
+  "85": {
+    "pinyin": "taishikaochang",
+    "initials": "tskc"
+  },
+  "86": {
+    "pinyin": "zhuchudingzhishuizhuqingshipin",
+    "initials": "zcdzszqsp"
+  },
+  "87": {
+    "pinyin": "yuanzhishuizhugusifeiniushan",
+    "initials": "yzszgsfns"
+  },
+  "88": {
+    "pinyin": "heijiaodikashuizhuxiannenjituirou",
+    "initials": "hjdkszxnjtr"
+  },
+  "89": {
+    "pinyin": "xianxiashishugaodanbaiqingshishan",
+    "initials": "xxssgdbqss"
+  },
+  "90": {
+    "pinyin": "shuizhengdan",
+    "initials": "szd"
+  },
+  "91": {
+    "pinyin": "roumozhangdan",
+    "initials": "rmzd"
+  },
+  "92": {
+    "pinyin": "gelisiguatang",
+    "initials": "glsgt"
+  },
+  "93": {
+    "pinyin": "fengweiqiezi",
+    "initials": "fwqz"
+  }
+}

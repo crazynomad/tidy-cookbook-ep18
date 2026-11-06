@@ -1,0 +1,58 @@
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
+# dependencies
+/node_modules
+/.pnp
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
+
+# testing
+/coverage
+
+# next.js
+/.next/
+/out/
+
+# production
+/build
+
+# misc
+.DS_Store
+*.pem
+
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# env files (can opt-in for committing if needed)
+.env*
+
+# vercel
+.vercel
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts
+tsconfig.tsbuildinfo
+
+# Cloudflare
+# wrangler.jsonc 入库：database_id 只是资源标识，没有 API token 用不了；
+# 域名本来就公开。CI 需要这个文件。真正的凭据在 ~/.wrangler，从不入库。
+/.wrangler/
+
+# 配图生成的原始 PNG（每张约 2MB，共 160MB+）。
+# 不入库：公开仓库每次 clone 都会拉走全部 LFS 对象，
+# GitHub 免费额度只有 1GB/月流量，几次 clone 就会耗尽并连累自己。
+/.raw-images/
+
+
+# Local secrets and verification artifacts
+.dev.vars*
+.ep18-local/
+kitchen-backup*.sql

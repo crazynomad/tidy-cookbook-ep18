@@ -1,0 +1,302 @@
+/** 账号与会话。PBKDF2-SHA256 / 10 万轮 / 每人独立 16 字节 salt。 */
+
+const ITER = 100_000;
+const SESSION_DAYS = 90;
+
+/** 登录限流：15 分钟窗口内，同一用户名失败 10 次、同一 IP 失败 20 次就暂时拒绝 */
+export const FAIL_WINDOW_MS = 15 * 60_000;
+const FAIL_MAX_USER = 10;
+const FAIL_MAX_IP = 20;
+
+/** 旧的游客默认名统一显示成「食客」 */
+export function normalizeName(n?: string | null): string | null {
+  if (!n) return null;
+  return n === "小客" || n.toLowerCase() === "guest" ? "食客" : n;
+}
+
+export type Role = "owner" | "guest";
+export type SessionUser = {
+  id: string;
+  username: string;
+  displayName: string;
+  role: Role;
+  kitchenId: string;
+};
+
+const hex = (b: ArrayBuffer) =>
+  [...new Uint8Array(b)].map((x) => x.toString(16).padStart(2, "0")).join("");
+
+const unhex = (s: string) =>
+  new Uint8Array(s.match(/.{2}/g)!.map((x) => parseInt(x, 16)));
+
+export async function derive(password: string, saltHex: string): Promise<string> {
+  const key = await crypto.subtle.importKey(
+    "raw",
+    new TextEncoder().encode(password),
+    "PBKDF2",
+    false,
+    ["deriveBits"],
+  );
+  const bits = await crypto.subtle.deriveBits(
+    { name: "PBKDF2", hash: "SHA-256", salt: unhex(saltHex), iterations: ITER },
+    key,
+    256,
+  );
+  return hex(bits);
+}
+
+/** 定长比较，避免按字符提前返回泄漏信息 */
+function sameSecret(a: string, b: string): boolean {
+  if (a.length !== b.length) return false;
+  let diff = 0;
+  for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  return diff === 0;
+}
+
+export function randomHex(bytes: number): string {
+  return hex(crypto.getRandomValues(new Uint8Array(bytes)).buffer);
+}
+
+const failKeys = (username: string, ip: string) => [`u:${username}`, `ip:${ip}`];
+
+/** 还在锁定中就返回还要等多少毫秒，否则 0。先查这个再跑 KDF，被锁时不白烧 CPU */
+export async function loginBlockedFor(db: D1Database, username: string, ip: string): Promise<number> {
+  const now = Date.now();
+  const rows = await db
+    .prepare(`SELECT key, fails, first_at AS firstAt FROM login_fail WHERE key IN (?, ?) AND first_at > ?`)
+    .bind(...failKeys(username, ip), now - FAIL_WINDOW_MS)
+    .all<{ key: string; fails: number; firstAt: number }>();
+  let wait = 0;
+  for (const r of rows.results ?? []) {
+    const max = r.key.startsWith("u:") ? FAIL_MAX_USER : FAIL_MAX_IP;
+    if (r.fails >= max) wait = Math.max(wait, r.firstAt + FAIL_WINDOW_MS - now);
+  }
+  return wait;
+}
+
+/** 记一次失败：窗口过了就从 1 重新计 */
+export async function recordLoginFail(db: D1Database, username: string, ip: string) {
+  const now = Date.now();
+  const stale = now - FAIL_WINDOW_MS;
+  await db.batch(
+    failKeys(username, ip).map((k) =>
+      db
+        .prepare(
+          `INSERT INTO login_fail (key, fails, first_at) VALUES (?, 1, ?)
+           ON CONFLICT(key) DO UPDATE SET
+             fails    = CASE WHEN first_at <= ? THEN 1 ELSE fails + 1 END,
+             first_at = CASE WHEN first_at <= ? THEN excluded.first_at ELSE first_at END`,
+        )
+        .bind(k, now, stale, stale),
+    ),
+  );
+}
+
+/** 登录成功后清掉该用户名的失败计数（IP 的不清，免得换着用户名猜） */
+export async function clearLoginFail(db: D1Database, username: string) {
+  await db.prepare(`DELETE FROM login_fail WHERE key = ?`).bind(`u:${username}`).run();
+}
+
+export async function login(
+  db: D1Database,
+  username: string,
+  password: string,
+): Promise<{ token: string; user: SessionUser } | null> {
+  const row = await db
+    .prepare(
+      `SELECT id, username, display_name, pw_hash, pw_salt, role, kitchen_id
+         FROM user WHERE username = ?`,
+    )
+    .bind(username)
+    .first<{
+      id: string;
+      username: string;
+      display_name: string;
+      pw_hash: string;
+      pw_salt: string;
+      role: Role;
+      kitchen_id: string;
+    }>();
+  if (!row) {
+    // 用户不存在时也跑一次 KDF，让耗时和存在时一致
+    await derive(password, "00".repeat(16));
+    return null;
+  }
+  const got = await derive(password, row.pw_salt);
+  if (!sameSecret(got, row.pw_hash)) return null;
+
+  const token = randomHex(32);
+  const now = Date.now();
+  await db
+    .prepare(
+      `INSERT INTO session (token, user_id, expires_at, created_at) VALUES (?,?,?,?)`,
+    )
+    .bind(token, row.id, now + SESSION_DAYS * 86400_000, now)
+    .run();
+
+  return {
+    token,
+    user: {
+      id: row.id,
+      username: row.username,
+      displayName: row.display_name,
+      role: row.role,
+      kitchenId: row.kitchen_id,
+    },
+  };
+}
+
+/** 注册。一律 guest 角色，并入同一个厨房。 */
+export async function register(
+  db: D1Database,
+  username: string,
+  password: string,
+  displayName: string,
+  kitchenId = "main",
+): Promise<{ token: string; user: SessionUser } | { error: string }> {
+  if (!/^[a-zA-Z0-9_]{2,16}$/.test(username))
+    return { error: "用户名只能用 2-16 位字母、数字或下划线" };
+  if (password.length < 6) return { error: "密码至少 6 位" };
+
+  const salt = randomHex(16);
+  const pwHash = await derive(password, salt);
+  const now = Date.now();
+  const id = randomHex(8);
+
+  const resolvedName =
+    displayName.trim() || (username.toLowerCase() === "guest" ? "食客" : username);
+
+  // 用唯一约束判重：先查再插有空档，两人同时注册同名会抛错
+  const ins = await db
+    .prepare(
+      `INSERT INTO user (id, username, display_name, pw_hash, pw_salt, role, kitchen_id, created_at)
+       VALUES (?,?,?,?,?,'guest',?,?)
+       ON CONFLICT(username) DO NOTHING`,
+    )
+    .bind(id, username, resolvedName, pwHash, salt, kitchenId, now)
+    .run();
+  if (!ins.meta?.changes) return { error: "该用户名已被使用" };
+
+  const token = randomHex(32);
+  await db
+    .prepare(
+      `INSERT INTO session (token, user_id, expires_at, created_at) VALUES (?,?,?,?)`,
+    )
+    .bind(token, id, now + SESSION_DAYS * 86400_000, now)
+    .run();
+
+  return {
+    token,
+    user: {
+      id,
+      username,
+      displayName: resolvedName,
+      role: "guest",
+      kitchenId,
+    },
+  };
+}
+
+export async function resolveSession(
+  db: D1Database,
+  token: string | null,
+): Promise<SessionUser | null> {
+  if (!token) return null;
+  const row = await db
+    .prepare(
+      `SELECT u.id, u.username, u.display_name, u.role, u.kitchen_id, s.expires_at
+         FROM session s JOIN user u ON u.id = s.user_id
+        WHERE s.token = ?`,
+    )
+    .bind(token)
+    .first<{
+      id: string;
+      username: string;
+      display_name: string;
+      role: Role;
+      kitchen_id: string;
+      expires_at: number;
+    }>();
+  if (!row) return null;
+  if (row.expires_at < Date.now()) {
+    await db.prepare(`DELETE FROM session WHERE token = ?`).bind(token).run();
+    return null;
+  }
+  return {
+    id: row.id,
+    username: row.username,
+    displayName: normalizeName(row.display_name) ?? row.display_name,
+    role: row.role,
+    kitchenId: row.kitchen_id,
+  };
+}
+
+/** 滑动续期：剩余不足 89 天才写库（约每天最多一次），返回是否续了 */
+export async function renewSession(db: D1Database, token: string | null): Promise<boolean> {
+  if (!token) return false;
+  const now = Date.now();
+  const r = await db
+    .prepare(`UPDATE session SET expires_at = ? WHERE token = ? AND expires_at < ?`)
+    .bind(now + SESSION_DAYS * 86400_000, token, now + (SESSION_DAYS - 1) * 86400_000)
+    .run();
+  return (r.meta?.changes ?? 0) > 0;
+}
+
+export async function logout(db: D1Database, token: string | null) {
+  if (token) await db.prepare(`DELETE FROM session WHERE token = ?`).bind(token).run();
+}
+
+export function readCookie(req: Request, name: string): string | null {
+  const raw = req.headers.get("Cookie");
+  if (!raw) return null;
+  for (const part of raw.split(";")) {
+    const [k, ...v] = part.trim().split("=");
+    if (k === name) return decodeURIComponent(v.join("="));
+  }
+  return null;
+}
+
+/**
+ * 取会话令牌：cookie 优先；cookie 被浏览器清掉时，退而用客户端 localStorage 里存的令牌。
+ *   - HTTP：Authorization: Bearer <token>
+ *   - WebSocket 不能自定义头，令牌放在 Sec-WebSocket-Protocol（形如 "auth.<token>"），避免出现在 URL / 日志里
+ * 令牌是 64 位十六进制，格式不对一律当没有。
+ */
+const TOKEN_RE = /^[0-9a-f]{64}$/;
+
+export function readToken(req: Request): string | null {
+  const c = readCookie(req, "sid");
+  if (c && TOKEN_RE.test(c)) return c;
+
+  const auth = req.headers.get("Authorization");
+  if (auth?.startsWith("Bearer ")) {
+    const t = auth.slice(7).trim();
+    if (TOKEN_RE.test(t)) return t;
+  }
+
+  const proto = req.headers.get("Sec-WebSocket-Protocol");
+  if (proto) {
+    for (const part of proto.split(",")) {
+      const v = part.trim();
+      if (v.startsWith("auth.") && TOKEN_RE.test(v.slice(5))) return v.slice(5);
+    }
+  }
+  return null;
+}
+
+/** WebSocket 握手要原样回显客户端提供的子协议，否则浏览器会断开 */
+export function wsProtocol(req: Request): string | null {
+  const proto = req.headers.get("Sec-WebSocket-Protocol");
+  if (!proto) return null;
+  for (const part of proto.split(",")) {
+    const v = part.trim();
+    if (v.startsWith("auth.")) return v;
+  }
+  return null;
+}
+
+export function sessionCookie(token: string): string {
+  return `sid=${token}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=${SESSION_DAYS * 86400}`;
+}
+
+export const CLEAR_COOKIE = "sid=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0";

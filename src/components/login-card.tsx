@@ -1,0 +1,138 @@
+"use client";
+
+import { useState } from "react";
+import Image from "next/image";
+import { setToken, useAuth, type Me } from "@/lib/auth-store";
+import { cn } from "@/lib/utils";
+
+type Mode = "login" | "register";
+
+export function LoginCard() {
+  const setMe = useAuth((s) => s.setMe);
+  const [mode, setMode] = useState<Mode>("login");
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [displayName, setDisplayName] = useState("");
+  const [inviteCode, setInviteCode] = useState("");
+  const [err, setErr] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (busy) return;
+    setBusy(true);
+    setErr("");
+    try {
+      const body =
+        mode === "login"
+          ? { username, password }
+          : { username, password, displayName, inviteCode };
+      const r = await fetch(`/api/${mode}`, {
+        method: "POST",
+        credentials: "same-origin",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      const data = (await r.json()) as { user?: Me; token?: string; error?: string };
+      if (!r.ok || !data.user) {
+        setErr(data.error ?? "出错了，请重试");
+        return;
+      }
+      setToken(data.token ?? null);
+      setMe(data.user);
+    } catch {
+      setErr("无法连接服务器");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div className="grid min-h-dvh place-items-center bg-paper px-6">
+      <div className="w-full max-w-[320px]">
+        <h1 className="flex items-center gap-2 font-display text-[26px] tracking-wide text-ink">
+          <Image src="/logo-mark.webp" alt="" width={42} height={32} priority />
+          慧厨时光
+        </h1>
+        {mode === "login" && (
+          <p className="mt-2 text-[11.5px] leading-relaxed text-ink-3">登录后点菜单会在所有设备同步</p>
+        )}
+
+        <form onSubmit={submit} className="mt-7 flex flex-col gap-2.5">
+          <Field
+            label="用户名"
+            value={username}
+            onChange={setUsername}
+            autoComplete="username"
+          />
+          {mode === "register" && (
+            <>
+              <Field label="显示名" value={displayName} onChange={setDisplayName} />
+              <Field label="邀请码" value={inviteCode} onChange={setInviteCode} autoComplete="off" />
+            </>
+          )}
+          <Field
+            label="密码"
+            value={password}
+            onChange={setPassword}
+            type="password"
+            autoComplete={mode === "login" ? "current-password" : "new-password"}
+          />
+
+          {err && <p className="px-1 text-[11px] text-chili">{err}</p>}
+
+          <button
+            type="submit"
+            disabled={busy || !username || !password || (mode === "register" && !inviteCode)}
+            className={cn(
+              "mt-2 h-11 rounded-full bg-accent text-[14px] tracking-wider text-white transition",
+              "active:scale-[0.98] disabled:opacity-40",
+            )}
+          >
+            {busy ? "请稍候…" : mode === "login" ? "登录" : "注册并登录"}
+          </button>
+        </form>
+
+        <button
+          type="button"
+          onClick={() => {
+            setMode(mode === "login" ? "register" : "login");
+            setErr("");
+          }}
+          className="mt-4 w-full text-center text-[11.5px] text-ink-3 underline underline-offset-4"
+        >
+          {mode === "login" ? "有邀请码？加入厨房" : "已经有账号了，去登录"}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function Field({
+  label,
+  value,
+  onChange,
+  type = "text",
+  autoComplete,
+}: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  type?: string;
+  autoComplete?: string;
+}) {
+  return (
+    <label className="flex items-center gap-3 rounded-xl border border-line bg-card px-3.5 py-2.5">
+      <span className="w-[42px] shrink-0 text-[11.5px] text-ink-3">{label}</span>
+      <input
+        type={type}
+        value={value}
+        autoComplete={autoComplete}
+        autoCapitalize="none"
+        autoCorrect="off"
+        onChange={(e) => onChange(e.target.value)}
+        className="min-w-0 flex-1 bg-transparent text-[14px] text-ink outline-none placeholder:text-ink-3"
+      />
+    </label>
+  );
+}

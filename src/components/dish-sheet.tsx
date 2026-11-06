@@ -1,0 +1,258 @@
+"use client";
+
+import { useEffect, useRef, useState } from "react";
+import { Drawer } from "vaul";
+import { Minus, Plus, SlidersHorizontal, Star } from "@phosphor-icons/react";
+import { metaIcon } from "@/lib/icons";
+import { toast } from "sonner";
+import { CUSTOM_CONFIGS } from "@/data/custom-options";
+import { getDish } from "@/data/dishes";
+import { catTheme, spicyLabel } from "@/lib/theme";
+import { useCustomModal } from "@/lib/custom-modal-store";
+import { useCart } from "@/lib/store";
+import { useDishRatings } from "@/lib/dish-rating-store";
+import { useDishSheet } from "@/lib/ui-store";
+import { haptic } from "@/lib/utils";
+import { useGuard } from "@/lib/use-guard";
+import { DishThumb } from "./dish-thumb";
+
+export function DishSheet() {
+  const dishId = useDishSheet((s) => s.dishId);
+  const close = useDishSheet((s) => s.close);
+  const focus = useDishSheet((s) => s.focus);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const ingredientsRef = useRef<HTMLDivElement>(null);
+
+  // 从备菜页打开：直接滚到「食材」，做饭时不用再往下翻
+  useEffect(() => {
+    if (!dishId || focus !== "ingredients") return;
+    const id = requestAnimationFrame(() => {
+      const sc = scrollRef.current;
+      const el = ingredientsRef.current;
+      if (sc && el) sc.scrollTop = el.offsetTop - 8; // 滚动容器是 relative，offsetTop 就是相对它的位置
+    });
+    return () => cancelAnimationFrame(id);
+  }, [dishId, focus]);
+  const openCustom = useCustomModal((s) => s.open);
+  const add = useCart((s) => s.add);
+  const [n, setN] = useState(1);
+
+  const dish = dishId ? getDish(dishId) : undefined;
+  const isCustomizable = dishId ? !!CUSTOM_CONFIGS[dishId] : false;
+  const orderCount = useCart((s) => (dish ? s.stats[dish.id] || 0 : 0));
+  const rating = useDishRatings((s) => (dish ? s.ratings[dish.id] : undefined));
+
+  // 抽屉收起动画期间按钮仍可点，挡住二次加入
+  const addToCart = useGuard(() => {
+    if (!dish) return;
+    haptic();
+    add(dish.id, n);
+    toast(n > 1 ? `已加入 ${n} 份 · ${dish.name}` : `已加入 · ${dish.name}`);
+    close();
+  }, 800);
+  const t = dish ? catTheme[dish.category] : null;
+
+  return (
+    <Drawer.Root
+      open={!!dish}
+      onOpenChange={(o) => {
+        if (!o) close();
+        setN(1);
+      }}
+      repositionInputs={false}
+      scrollLockTimeout={0}
+      closeThreshold={0.2}
+    >
+      <Drawer.Portal>
+        <Drawer.Overlay className="fixed inset-0 z-50 bg-ink/35" />
+        <Drawer.Content
+          // 打开时不要自动聚焦：默认会聚焦第一个可点元素并把它滚进视野，详情直接跳到底部的食材和做法
+          onOpenAutoFocus={(e) => e.preventDefault()}
+          className="fixed inset-x-0 bottom-0 z-50 mx-auto flex h-[88dvh] max-w-[520px] flex-col rounded-t-2xl border-t border-line bg-paper outline-none">
+          {dish && t && (
+            <>
+              <div className="shrink-0 pt-3 pb-2 cursor-grab active:cursor-grabbing">
+                <div className="mx-auto h-1.5 w-12 rounded-full bg-line-2 transition-colors active:bg-ink-3" />
+              </div>
+
+              <div ref={scrollRef} className="no-scrollbar relative flex-1 overflow-y-auto overscroll-contain px-5 pb-6">
+                <Drawer.Title className="sr-only">{dish.name}</Drawer.Title>
+
+                <DishThumb
+                  dish={dish}
+                  className="aspect-[16/10] w-full rounded-xl"
+                  sizes="(max-width:520px) 100vw, 520px"
+                  priority
+                  variant="lg"
+                />
+
+                <div className="mt-4 flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <h2 className="font-display text-[23px] leading-tight tracking-wider text-ink">
+                      {dish.name}
+                    </h2>
+                    <p className="mt-1.5 text-[12.5px] leading-relaxed text-ink-2">
+                      {dish.desc}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="mt-4 flex divide-x divide-line rounded-card border border-line bg-card">
+                  <div className="flex-1 px-3 py-2.5 text-center">
+                    <div className="flex items-center justify-center gap-1 text-[10px] text-ink-3">
+                      <metaIcon.spicy size={12} weight="regular" />
+                      辣度
+                    </div>
+                    <div className="mt-0.5 text-[13px] text-ink">{spicyLabel[dish.spicy]}</div>
+                  </div>
+                  <div className="flex-1 px-3 py-2.5 text-center">
+                    <div className="flex items-center justify-center gap-1 text-[10px] text-ink-3">
+                      <metaIcon.tags size={12} weight="regular" />
+                      标签
+                    </div>
+                    <div className="mt-0.5 truncate text-[13px] text-ink">
+                      {dish.tags[0] ?? "家常"}
+                    </div>
+                  </div>
+                  <div className="flex-1 px-3 py-2.5 text-center">
+                    <div className="flex items-center justify-center gap-1 text-[10px] text-ink-3">
+                      <metaIcon.sales size={12} weight="regular" />
+                      销量
+                    </div>
+                    <div className="mt-0.5 text-[13px] tabular-nums font-medium text-caramel">
+                      {orderCount > 0 ? `${orderCount} 份` : <span className="text-ink-3 font-normal">暂无</span>}
+                    </div>
+                  </div>
+                  {/* 被单独打过分才有这一栏 */}
+                  {rating && (
+                    <div className="flex-1 px-3 py-2.5 text-center">
+                      <div className="flex items-center justify-center gap-1 text-[10px] text-ink-3">
+                        <Star size={12} weight="regular" />
+                        评分
+                      </div>
+                      <div className="mt-0.5 text-[13px] font-medium tabular-nums text-accent">
+                        {rating.avg.toFixed(1)}
+                        <span className="ml-0.5 text-[10px] font-normal text-ink-3">· {rating.n}次</span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                <div ref={ingredientsRef}>
+                  <SectionTitle icon={metaIcon.ingredients}>食材</SectionTitle>
+                </div>
+                <div className="space-y-3">
+                  {dish.ingredients.map((g) => (
+                    <div key={g.group}>
+                      <div className="mb-1.5 text-[10.5px] tracking-[0.2em] text-ink-3">
+                        {g.group}
+                      </div>
+                      <div className="grid grid-cols-2 gap-x-4 gap-y-1">
+                        {g.items.map((it) => (
+                          <div
+                            key={it.name}
+                            className="flex items-baseline justify-between gap-2 border-b border-dashed border-line pb-1"
+                          >
+                            <span className="text-[12.5px] text-ink">{it.name}</span>
+                            <span className="shrink-0 text-[11px] text-ink-3 tabular-nums">
+                              {it.amount}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <SectionTitle icon={metaIcon.steps}>做法</SectionTitle>
+                <ol className="space-y-3">
+                  {dish.steps.map((s, i) => (
+                    <li key={i} className="flex gap-3">
+                      <span
+                        className="mt-[3px] shrink-0 font-display text-[13px] leading-none tabular-nums"
+                        style={{ color: t.hex }}
+                      >
+                        {String(i + 1).padStart(2, "0")}
+                      </span>
+                      <p className="text-[13px] leading-[1.7] text-ink">{s}</p>
+                    </li>
+                  ))}
+                </ol>
+              </div>
+
+              <div
+                className="shrink-0 border-t border-line bg-paper/95 px-5 py-3 backdrop-blur"
+                style={{ paddingBottom: "calc(0.75rem + env(safe-area-inset-bottom))" }}
+              >
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-3 rounded-full border border-line-2 bg-card px-3 py-2">
+                    <button
+                      type="button"
+                      aria-label="减少"
+                      onClick={() => {
+                        haptic(8);
+                        setN((v) => Math.max(1, v - 1));
+                      }}
+                      className="text-ink-2 active:scale-90"
+                    >
+                      <Minus size={15} weight="bold" />
+                    </button>
+                    <span className="w-4 text-center text-[14px] tabular-nums">{n}</span>
+                    <button
+                      type="button"
+                      aria-label="增加"
+                      onClick={() => {
+                        haptic(8);
+                        setN((v) => v + 1);
+                      }}
+                      className="text-ink-2 active:scale-90"
+                    >
+                      <Plus size={15} weight="bold" />
+                    </button>
+                  </div>
+                  {isCustomizable ? (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        close();
+                        if (dish) openCustom(dish.id);
+                      }}
+                      className="flex flex-1 items-center justify-center gap-1.5 rounded-full bg-accent py-3 text-[14px] font-medium tracking-wide text-white transition active:scale-[0.98]"
+                    >
+                      <SlidersHorizontal size={16} weight="bold" />
+                      <span>选规格</span>
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={addToCart}
+                      className="flex-1 rounded-full bg-accent py-3 text-[14px] tracking-wide text-white transition active:scale-[0.98]"
+                    >
+                      加入点菜单
+                    </button>
+                  )}
+                </div>
+              </div>
+            </>
+          )}
+        </Drawer.Content>
+      </Drawer.Portal>
+    </Drawer.Root>
+  );
+}
+
+function SectionTitle({
+  children,
+  icon: Icon,
+}: {
+  children: React.ReactNode;
+  icon: React.ComponentType<{ size?: number; weight?: "regular" | "fill" }>;
+}) {
+  return (
+    <div className="mt-7 mb-3 flex items-center gap-2.5">
+      <Icon size={16} weight="regular" />
+      <h3 className="font-display text-[15px] tracking-[0.25em] text-ink">{children}</h3>
+      <span className="h-px flex-1 bg-line" />
+    </div>
+  );
+}
