@@ -2,21 +2,15 @@
 
 更新：2026-11-04。基于上游 `RUIIIOVO/tidy-cookbook` 的 `bd6c7fe66192bdef92ef152c64250adc3c407257`，修改分支 `codex/ep18-free-deploy`。
 
-**这是修改版的教程。修改版目前只在节目制作本地仓库，尚未发布公开下载地址。直接 clone 上游后不能照抄下列新增命令。正式提供给观众前，需要发布这一修改分支的固定版本，并把此处换成真实仓库与 commit/tag；不要填一个尚不存在的下载地址。**
-
-当前验证：本地及真实公网双账号流程已通过，重新部署后订单与点评仍保留。账户 Workers Free 由账号本人确认，Dashboard 套餐页未能独立核验，未检查实际账单。没有升级套餐或启用付费项。两台真实设备、移动网络与长期额度仍需自行验收。
-
-节目制作仓库另保存了 `tidy-cookbook-ep18.patch`，可在固定上游基线上复原本修改版。公开提供给观众前，先发布这个补丁或包含修改的源码；下方本地路径应换成实际下载位置：
+**这是 EP18 修改版的教程。** 源码入口为 [crazynomad/tidy-cookbook-ep18](https://github.com/crazynomad/tidy-cookbook-ep18)。此前 CLI 公网功能已验证；本仓库 Git 自动发布链路正在预演，尚未宣称完成。
 
 ```bash
-git clone https://github.com/RUIIIOVO/tidy-cookbook.git tidy-cookbook-ep18
+git clone https://github.com/crazynomad/tidy-cookbook-ep18.git
 cd tidy-cookbook-ep18
-git switch -c ep18-demo bd6c7fe66192bdef92ef152c64250adc3c407257
-git apply --check /实际下载位置/tidy-cookbook-ep18.patch
-git apply /实际下载位置/tidy-cookbook-ep18.patch
+cp wrangler.example.jsonc wrangler.jsonc
 ```
 
-补丁仅包含源码、配置模板和文档；不会提供任何可登录真实厨房的密码或邀请码。
+复制配置模板这一步必须保留：仓库实际 `wrangler.jsonc` 供节目独立测试实例使用，跟做要换成自己的 Worker 名称和 D1。数据库 ID 是资源标识，不能拿作者的资源代替自己的数据库。本仓库不提供任何可登录真实厨房的密码或邀请码。
 
 
 ## 最终会得到什么
@@ -59,7 +53,7 @@ pnpm exec wrangler login --device --browser=false --scopes account:read user:rea
 pnpm exec wrangler whoami
 ```
 
-终端会给出验证网址和一次性设备码。本人打开网址、登录 Cloudflare、输入设备码并授权；保留终端等待，直到出现 `Successfully logged in`。设备码不要发给别人。实测这条设备授权流程成功；本轮使用 Wrangler 4.135.0，默认 localhost 回调在实测中于 120 秒后关闭端口，浏览器再完成登录也不能把凭据交回 CLI。超时后重新运行设备授权命令，使用新码。
+终端会给出验证网址和一次性设备码。本人打开网址、登录 Cloudflare、输入设备码并授权；保留终端等待，直到出现 `Successfully logged in`。设备码不要发给别人。实测这条设备授权流程成功；首次授权预跑使用 Wrangler 4.135.0；2026-11-06 新实例上传使用 4.158.0 并固定到当前仓库，默认 localhost 回调在实测中于 120 秒后关闭端口，浏览器再完成登录也不能把凭据交回 CLI。超时后重新运行设备授权命令，使用新码。
 
 备用是 `pnpm exec wrangler login --scopes account:read user:read workers_scripts:write d1:write workers_tail:read` 的本地回调方式。界面已登录不代表 CLI 已授权，以 `whoami` 成功为准。上述最小 scopes 可能触发 Wrangler 的「缺少默认 scopes」警告；不为消除警告添加 R2、AI、域名等无关权限，仅在实际操作出现明确权限错误时处理。
 
